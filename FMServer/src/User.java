@@ -32,10 +32,3 @@ public class User {
 
     // TODO: Use HashMap to store user information where username is the key and an instance of User is the value.
 }
-
-
-/**
- * Purpose of Method
- * @param parameters (may be more than one)
- * @return (if not void)
- * Methods*/
