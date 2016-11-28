@@ -3,7 +3,7 @@
  *
  * Keeps details of user
  *
- * @author Brandon Nguyen, nguye299@purdue.edu, Lab Section G06
+ * @author Brandon Nguyen & Daniel Acevedo, nguye299@purdue.edu & acevedd@purdue.edu, Lab Section G06
  *
  * @version November 22, 2016
  *
