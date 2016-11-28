@@ -3,7 +3,7 @@
  *
  * Protcol used to communicate between client and server.
  *
- * @author Brandon Nguyen, nguye299@purdue.edu, Lab Section G06
+ * @author sunil
  *
  * @version November 27, 2016
  *
