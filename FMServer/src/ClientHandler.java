@@ -1,0 +1,70 @@
+import java.net.*;
+import java.io.*;
+
+
+public class ClientHandler extends Thread{
+	private Socket clientSocket;
+	private int clientID;
+	private boolean running;
+	
+	public ClientHandler(Socket clientSocket, int clientID){
+		this.clientSocket = clientSocket;
+		this.clientID = clientID;
+	}
+	
+	public void run(){
+		try{
+			running = true;
+			while(running){	
+				clientInteraction();
+			}
+		}catch(IOException e){
+			e.printStackTrace();
+		}
+	}
+	
+	public void clientInteraction()throws IOException{
+		PrintWriter outToClient = null;
+		BufferedReader inFromClient = null;
+		String inputLine, outputLine = null;
+		
+		try{
+			outToClient = new PrintWriter(clientSocket.getOutputStream(), true);
+			inFromClient = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+			
+			//implement while loop that runs while client is connected, this will handle requests
+			while((inputLine = inFromClient.readLine()) != null){
+				System.out.println("Request from client: " + inputLine);
+				String[] arr = inputLine.split("--");
+				
+				if(arr[0].equals("CREATENEWUSER")){
+					outputLine = FMServer.registerUser(inputLine);
+					outToClient.println(outputLine);
+					System.out.println("Sent to client: " + outputLine);
+				}else if(arr[0].equals("LOGIN")){
+					outputLine = FMServer.loginUser(inputLine);
+					outToClient.println(outputLine);
+					System.out.println("Sent to client: " + outputLine);
+				}else if(arr[0].equals("STARTNEWGAME")){
+					//create a game session object with the current user as leader and user's token
+				}
+			}
+			
+		}catch(IOException e){
+			System.out.println("Unexpected interruption");
+			closeSocket();
+		}finally{
+			if(outToClient != null)
+				outToClient.close();
+			if(inFromClient != null)
+				inFromClient.close();
+				System.out.println("User " + clientID + " disconnected");
+			clientSocket.close();
+			closeSocket();
+			}
+		}
+	
+	public void closeSocket(){
+		running = false;
+	}
+}
