@@ -1,3 +1,12 @@
+import java.io.*;
+import java.net.BindException;
+import java.net.MalformedURLException;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Random;
+
 /**
  * FMServer.java
  *
@@ -18,11 +27,12 @@ public class FMServer {
     private static BufferedReader inFromClient = null;
     private static BufferedWriter toUserDB = null;
 	private static BufferedWriter toWordleDeck = null;
-    
+	
     static HashMap<String, User> userHashMap = new HashMap<>();	//List of all users in the database
-    static HashMap<String, User> currentUserHash = new HashMap<>(); //List of users logged onto server
+    static HashMap<String, User> currentUserHash = new HashMap<>(); //List of users logged onto server with token as key
     static HashMap<Integer, Socket> runningSockets = new HashMap<>();	//Sockets connected to clients, key is clientID (int)
     static HashMap<Integer, ClientHandler> runningHandlers = new HashMap<>(); //Request handlers, key is also clientID
+    static HashMap<String, GameSession> runningGames = new HashMap<>(); //Game handlers, key is the game token
     static int clientID = 0;
     
     /**
@@ -43,8 +53,7 @@ public class FMServer {
     		System.out.println("Port is already in use");
     	}catch(IOException e){
     		e.printStackTrace();
-    	}
-    	
+    	} 
     }
     
     /*
@@ -178,9 +187,40 @@ public class FMServer {
     		User player = new User();
     		player.setUsername(username);
     		player.setPassword(password);
-    		currentUserHash.put(username, player);
+    		currentUserHash.put(token, player);
     		reply = "RESPONSE--LOGIN--SUCCESS--" + token;
     	}
+    	return reply;
+    }
+    
+    //Starts new game
+    public static String startNewGame(String message, PrintWriter writer, BufferedReader reader, Socket clientSocket){
+    	String reply = "";
+    	String gameKey = " ";
+    	
+    	String[] arr = message.split("--");
+    	String gameToken = arr[1];
+    	
+    	if(currentUserHash.containsKey(gameToken) == false){
+    		reply = "RESPONSE--STARTNEWGAME--USERNOTLOGGEDIN";
+    	}else if(runningGames.containsKey(gameToken)){
+    		reply = "RESPONSE--STARTNEWGAME--FAILURE";
+    	}else{
+    		String[] charBase = {"a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z"};
+    		Random rand = new Random();
+    		String key = "";
+    		for(int i = 1; i < charBase.length; i++){
+    			String add = charBase[rand.nextInt(i)];
+    			gameKey = gameKey.concat(add);
+    		}
+    		key = gameKey.substring(gameKey.length()-3, gameKey.length());
+    		
+    		runningGames.put(gameToken, new GameSession(currentUserHash.get(gameToken), key, writer, reader, clientSocket));
+			runningGames.get(gameToken).start();
+    		
+    		reply = "RESPONSE--STARTNEWGAME--SUCCESS--" + key;
+    	}
+    	
     	return reply;
     }
     
