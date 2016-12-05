@@ -20,7 +20,6 @@ import java.util.Scanner;
  */
 public class FMServer {
 
-
     // Server Connection Data
     private String serverName = null;
     private static PrintWriter outToClient = null;
