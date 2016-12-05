@@ -27,6 +27,9 @@ public class FMServer {
     private static BufferedReader inFromClient = null;
     private static BufferedWriter toUserDB = null;
 	private static BufferedWriter toWordleDeck = null;
+	private static BufferedReader inUserDB = null;
+	private static BufferedReader inWordleDeck = null;
+	private static ArrayList<String> deck = new ArrayList<String>();
 	
     static HashMap<String, User> userHashMap = new HashMap<>();	//List of all users in the database
     static HashMap<String, User> currentUserHash = new HashMap<>(); //List of users logged onto server with token as key
@@ -54,21 +57,6 @@ public class FMServer {
     	}catch(IOException e){
     		e.printStackTrace();
     	} 
-    	/*
-    	HashMap<String, String> strMap = new HashMap<>();
-    	strMap.put("key", "value");
-    	strMap.put("key1", "nextVal");
-    	System.out.println(strMap.keySet());
-    	String value;
-    	for(int i = 0; i < strMap.size(); i++){
-    		if(strMap.containsKey("key")){
-    			value = strMap.get("key").replace('a', 'b');
-    			strMap.replace("key", , newValue)
-    		}else if(strMap.containsKey("key" + i)){
-    			strMap.get("key" + i).replace('a', 'b');
-    		}
-    	}
-    	System.out.println(strMap.values()); */
     }
     
     /*
@@ -79,8 +67,8 @@ public class FMServer {
     public static void initializeServer(int portNumber) throws IOException {
 
       //Open user database and wordle deck to read and write to
-        BufferedReader inUserDB = new BufferedReader(new FileReader("C://Users//Daniel//workspace//Project 4//UserDatabase.txt"));
-		BufferedReader inWordleDeck = new BufferedReader(new FileReader("C://Users//Daniel//workspace//Project 4//WordleDeck.txt"));
+        inUserDB = new BufferedReader(new FileReader("C://Users//Daniel//workspace//Project 4//UserDatabase.txt"));
+		inWordleDeck = new BufferedReader(new FileReader("C://Users//Daniel//workspace//Project 4//WordleDeck.txt"));
 		toUserDB = new BufferedWriter(new FileWriter("C://Users//Daniel//workspace//Project 4//UserDatabase.txt",true));
 		
 		//Adds users in database to hashmap
@@ -232,9 +220,9 @@ public class FMServer {
     			gameKey = gameKey.concat(add);
     		}
     		key = gameKey.substring(gameKey.length()-3, gameKey.length());
-    		runningGames.put(key, new GameSession(currentUserHash.get(gameToken), key));
+    		runningGames.put(key, new GameSession(currentUserHash.get(gameToken), key, clientSocket, writer, reader));
     		runningGames.get(key).setGameLeader(currentUserHash.get(gameToken));
-			runningGames.get(key).start();
+			//runningGames.get(key).start();
     		reply = "RESPONSE--STARTNEWGAME--SUCCESS--" + key;
     		
     	}
@@ -258,11 +246,15 @@ public class FMServer {
     	}else if(runningGames.get(gameKey).getCurrentParticipants().containsKey(currentUserHash.get(userToken).getUsername()) == true){
     		reply = "RESPONSE--JOINGAME--FAILURE";
     	}else{
+    		//Here a new key is generated for the joining player, this second key just adds this players clientID to the base key as a reference to his/her game session
     		String gameKey2 = gameKey + currentUserHash.get(userToken).getID();
-    		runningGames.put(gameKey2, new GameSession(currentUserHash.get(userToken), gameKey2));
+    		runningGames.put(gameKey2, new GameSession(currentUserHash.get(userToken), gameKey2, clientSocket, writer, reader));
     		runningGames.get(gameKey).incNumPlayers();
+    		runningGames.get(gameKey).getCurrentParticipants().put(currentUserHash.get(userToken).getUsername(), currentUserHash.get(userToken));
+    		runningGames.get(gameKey2).getCurrentParticipants().putAll(runningGames.get(gameKey).getCurrentParticipants());
     		runningGames.get(gameKey2).incNumPlayers();
     		runningGames.get(gameKey2).setGameLeader(runningGames.get(gameKey).gameLeader);
+    		//runningGames.get(gameKey2).start();
     		
     		int gameLeaderID = runningGames.get(gameKey).gameLeader.getID();
     		outToClient = new PrintWriter(runningSockets.get(gameLeaderID).getOutputStream(), true);
@@ -274,7 +266,7 @@ public class FMServer {
     	return reply;
     }
     
-    public static String sessionStart(String message){
+    public static void sessionStart(String message) throws IOException{
     	String reply = "";
     	String[] arr = message.split("--");
     	
@@ -282,16 +274,37 @@ public class FMServer {
     	String userToken = arr[1];
     	String gameKey = arr[2];
     	
-    	if(currentUserHash.containsKey(userToken) == false){
+    	if(FMServer.currentUserHash.containsKey(userToken) == false){
     		reply = "RESPONSE--ALLPARTICIPANTSHAVEJOINED--USERNOTLOGGEDIN";
     	}else if(runningGames.containsKey(gameKey) == false){
     		reply = "RESPONSE--ALLPARTICIPANTSHAVEJOINED--INVALIDGAMETOKEN";
     	}else if(currentUserHash.get(userToken).getUsername() != runningGames.get(gameKey).gameLeader.getUsername()){
     		reply = "RESPONSE--ALLPARTICIPANTSHAVEJOINED--USERNOTGAMELEADER";
     	}else{
+    		String deckLines;
+    		while((deckLines = inWordleDeck.readLine()) != null){
+    			if(deckLines.isEmpty())
+    					continue;
+    			deck.add(deckLines);
+    		}
+    		
+    		String str = deck.get(0);
+    		String[] array = str.split(":");
+    		
+    		String question = array[0];
+    		String answer = array[1];
+    		
+    		runningGames.get(gameKey).writePlayer("NEWGAMEWORD--" + question + "--" + answer);
+    		
+    		for(int i = 0; i < runningGames.size(); i++){
+    			int j = i;
+    			if(runningGames.containsKey(gameKey+j))
+    				runningGames.get(gameKey+j).writePlayer("NEWGAMEWORD--" + question + "--" + answer);
+    		}	
+    		
     		
     	}
-    	return reply;
+    	
     }
     
     //Checks to see if string is alphanumeric
