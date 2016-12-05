@@ -43,14 +43,19 @@ public class ClientHandler extends Thread{
 					outToClient.println(outputLine);
 					System.out.println("Sent to client: " + outputLine);
 				}else if(arr[0].equals("LOGIN")){
-					outputLine = FMServer.loginUser(inputLine);
+					outputLine = FMServer.loginUser(inputLine, this.clientID);
 					outToClient.println(outputLine);
 					String[] arr2 = outputLine.split("--");
 					this.gameToken = arr2[3];
 					System.out.println("Sent to client: " + outputLine);
 				}else if(arr[0].equals("STARTNEWGAME")){
-					//create a game session object with the current user as leader and user's token
 					outputLine = FMServer.startNewGame(inputLine, outToClient, inFromClient, clientSocket);
+					outToClient.println(outputLine);
+				}else if(arr[0].equals("JOINGAME")){
+					outputLine = FMServer.joinGame(inputLine, outToClient, inFromClient, clientSocket);
+					outToClient.println(outputLine);
+				}else if(arr[0].equals("ALLPARTICIPANTSHAVEJOINED")){
+					outputLine = FMServer.sessionStart(inputLine);
 					outToClient.println(outputLine);
 				}
 			}
