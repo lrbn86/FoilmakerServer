@@ -5,6 +5,7 @@ import java.io.*;
 public class ClientHandler extends Thread{
 	private Socket clientSocket;
 	private int clientID;
+	private String gameToken;
 	private boolean running;
 	
 	public ClientHandler(Socket clientSocket, int clientID){
@@ -44,14 +45,19 @@ public class ClientHandler extends Thread{
 				}else if(arr[0].equals("LOGIN")){
 					outputLine = FMServer.loginUser(inputLine);
 					outToClient.println(outputLine);
+					String[] arr2 = outputLine.split("--");
+					this.gameToken = arr2[3];
 					System.out.println("Sent to client: " + outputLine);
 				}else if(arr[0].equals("STARTNEWGAME")){
 					//create a game session object with the current user as leader and user's token
+					outputLine = FMServer.startNewGame(inputLine, outToClient, inFromClient, clientSocket);
+					outToClient.println(outputLine);
 				}
 			}
 			
 		}catch(IOException e){
 			System.out.println("Unexpected interruption");
+			FMServer.currentUserHash.remove(this.gameToken);
 			closeSocket();
 		}finally{
 			if(outToClient != null)
@@ -60,6 +66,7 @@ public class ClientHandler extends Thread{
 				inFromClient.close();
 				System.out.println("User " + clientID + " disconnected");
 			clientSocket.close();
+			FMServer.currentUserHash.remove(this.gameToken);
 			closeSocket();
 			}
 		}
