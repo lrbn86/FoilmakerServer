@@ -3,28 +3,37 @@ import java.io.*;
 import java.util.HashMap;
 
 public class GameSession extends Thread{
-	private User gameLeader;
+	public User gameLeader;
 	private Socket clientSocket;
 	private BufferedReader reader;
 	private PrintWriter writer;
 	private boolean start;
 	final String gameKey;
 	static int minPlayers = 2;
-	static HashMap<String, User> currentParticipants= new HashMap<>();
+	private int numPlayers = 0;
+	private HashMap<String, User> currentParticipants= new HashMap<>(); //Username is key
 	
-	public GameSession(User gameLeader, String gameKey, PrintWriter writer, BufferedReader reader, Socket clientSocket){
-		this.gameLeader = gameLeader;
+	public GameSession(User user, String gameKey){
 		this.gameKey = gameKey;
-		this.writer = writer;
-		this.reader = reader;
-		this.clientSocket = clientSocket;
+		this.currentParticipants.put(user.getUsername(), user);
+		this.numPlayers++;
 	}
 	
-	//define run() , probably should run when game leader specifies some boolean start = true;
+	public void setGameLeader(User gameLeader){
+		this.gameLeader = gameLeader;
+	}
+	
 	public void run(){
+		
+		
 		try{
-			start = true;
-			while(start){
+			writer = new PrintWriter(FMServer.runningSockets.get(gameLeader.getID()).getOutputStream(), true);
+			reader = new BufferedReader(new InputStreamReader(FMServer.runningSockets.get(gameLeader.getID()).getInputStream()));
+			
+			if(minPlayers <= numPlayers)
+				writer.println("NEWPARTICIPANTS--");
+				
+			while(minPlayers <= numPlayers){
 				gameStart();
 			}
 		}catch(IOException e){
@@ -33,7 +42,6 @@ public class GameSession extends Thread{
 	}
 	
 	public void gameStart()throws IOException{
-		writer.println("Waiting for participants");
 		try{
 			String inputLine;
 			while((inputLine = reader.readLine()) != null){
@@ -55,8 +63,16 @@ public class GameSession extends Thread{
 			clientSocket.close();
 			start = false;
 		}
-			
-	
 		
 	}
+	
+	public HashMap<String, User> getCurrentParticipants(){
+		return this.currentParticipants;
+	}
+	
+	public void incNumPlayers(){
+		this.numPlayers++;
+	}
+	
+
 }
