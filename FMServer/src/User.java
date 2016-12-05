@@ -12,6 +12,7 @@ public class User {
 
     private String username;
     private String password;
+    private int clientID;	//dynamic ID that allows us to access client socket
 
     public String getUsername() {
         return this.username;
@@ -19,6 +20,10 @@ public class User {
 
     public String getPassword() {
         return this.password;
+    }
+    
+    public int getID(){
+    	return this.clientID;
     }
 
     public void setUsername(String username) {
@@ -28,7 +33,8 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
-
-
-    // TODO: Use HashMap to store user information where username is the key and an instance of User is the value.
+    
+    public void setID(int clientID){
+    	this.clientID = clientID;
+    }
 }
