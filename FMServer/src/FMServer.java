@@ -56,11 +56,12 @@ public class FMServer {
         }
     }
 
-    /*
-    *
-    * Use HashMap to store user information.
-    *
-    * */
+    /**
+     * Initializes server with given port number
+     *
+     * @param portNumber takes in port number
+     * @throws IOException
+     */
     public static void initializeServer(int portNumber) throws IOException {
 
         System.out.println("Server has started.");
@@ -68,8 +69,7 @@ public class FMServer {
         //Open user database and wordle deck to read and write to
         File userDatabase = new File ("C://Users//Daniel//workspace//Project 4//UserDatabase.txt");
         File wordleDeck = new File ("C://Users//Daniel//workspace//Project 4//WordleDeck.txt");
-
-
+        
         BufferedReader inUserDB = new BufferedReader(new FileReader(userDatabase));
 
         BufferedReader inWordleDeck = new BufferedReader(new FileReader(wordleDeck));
@@ -109,7 +109,6 @@ public class FMServer {
                 clientID++;
             }
 
-
         }catch(MalformedURLException e){
             e.getMessage();
         }finally {
@@ -124,6 +123,13 @@ public class FMServer {
         }
     }
 
+    /**
+     * Registers a User
+     *
+     * @param message takes in client's request
+     * @return a server response message when user wants to register
+     * @throws IOException
+     */
     public static String registerUser(String message) throws IOException{
         String reply = " ";
         String[] request = parseClientMessage(message);
@@ -159,7 +165,13 @@ public class FMServer {
         return reply;
     }
 
-    //User login
+    /**
+     * Logs in the User
+     *
+     * @param message takes in client's request
+     * @return a server response message when a user wants to login
+     * @throws IOException
+     */
     public static String loginUser(String message) throws IOException{
 
         String reply = "";
@@ -200,11 +212,18 @@ public class FMServer {
         return reply;
     }
 
-    //Starts new game
+    /**
+     * Starts a new game
+     *
+     * @param message takes in client's request
+     * @param writer to pass through the GameSession parameter
+     * @param reader to pass through the GameSession parameter
+     * @param clientSocket the client socket
+     * @return a server response when a user starts a new game
+     */
     public static String startNewGame(String message, PrintWriter writer, BufferedReader reader, Socket clientSocket){
         String reply = "";
         String gameKey = " ";
-
         String[] arr = message.split("--");
         String gameToken = arr[1];
 
@@ -231,6 +250,12 @@ public class FMServer {
         return reply;
     }
 
+    /**
+     * Reads in the content of UserDatabase file
+     *
+     * @param userDatabase takes in UserDatabase.txt file
+     * @throws FileNotFoundException
+     */
     public static void readInUserDatabase (File userDatabase) throws FileNotFoundException {
 
         Scanner input = new Scanner (userDatabase);
