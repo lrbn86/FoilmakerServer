@@ -49,14 +49,14 @@ public class ClientHandler extends Thread{
 					this.gameToken = arr2[3];
 					System.out.println("Sent to client: " + outputLine);
 				}else if(arr[0].equals("STARTNEWGAME")){
-					outputLine = FMServer.startNewGame(inputLine, outToClient, inFromClient, clientSocket);
+					outputLine = FMServer.startNewGame(inputLine, outToClient, inFromClient, this.clientSocket);
 					outToClient.println(outputLine);
 				}else if(arr[0].equals("JOINGAME")){
-					outputLine = FMServer.joinGame(inputLine, outToClient, inFromClient, clientSocket);
+					outputLine = FMServer.joinGame(inputLine, outToClient, inFromClient, this.clientSocket);
 					outToClient.println(outputLine);
 				}else if(arr[0].equals("ALLPARTICIPANTSHAVEJOINED")){
-					outputLine = FMServer.sessionStart(inputLine);
-					outToClient.println(outputLine);
+					FMServer.sessionStart(inputLine);
+					
 				}
 			}
 			
