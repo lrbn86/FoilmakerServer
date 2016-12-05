@@ -98,6 +98,7 @@ public class FMServer {
             System.out.println("Creating socket");
             listener = new ServerSocket(portNumber);
             System.out.println("Listening on port: " + portNumber);
+            System.out.println("--------------------------------");
             while (true) {
 
                 // Wait for next client connection, add to hashmap
